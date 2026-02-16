@@ -1,0 +1,183 @@
+import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import AuthorItems from "../components/author/AuthorItems";
+import AuthorBanner from "../images/author_banner.jpg";
+
+const shortenAddress = (addr) => `${addr.slice(0, 6)}...${addr.slice(-4)}`;
+
+const Author = () => {
+  const { authorId } = useParams();
+  const [author, setAuthor] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [following, setFollowing] = useState(false);
+
+  useEffect(() => {
+    async function fetchAuthor() {
+      try {
+        const res = await fetch(
+          `https://us-central1-nft-cloud-functions.cloudfunctions.net/authors?author=${authorId}`,
+        );
+        const data = await res.json();
+        setAuthor(data);
+      } catch (err) {
+        console.error("Failed to fetch author", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchAuthor();
+  }, [authorId]);
+
+  if (!author) {
+    return <div className="container text-center">Author not found</div>;
+  }
+
+  if (loading) {
+    return (
+      <div id="wrapper">
+        <div className="no-bottom no-top" id="content">
+          {/* Banner Skeleton */}
+          <section
+            id="profile_banner"
+            className="text-light"
+            style={{ background: "#e0e0e0", height: "300px" }}
+          />
+
+          <section>
+            <div className="container">
+              <div className="row">
+                {/* Profile Header Skeleton */}
+                <div className="col-md-12">
+                  <div className="d_profile de-flex">
+                    <div className="de-flex-col">
+                      <div className="profile_avatar text-center">
+                        <div className="skeleton-avatar"></div>
+
+                        <div className="profile_name text-center mt-3">
+                          <div className="skeleton-line title"></div>
+                          <div className="skeleton-line"></div>
+                          <div className="skeleton-line"></div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="profile_follow de-flex">
+                      <div className="de-flex-col text-center">
+                        <div className="skeleton-line title"></div>
+                        <div className="skeleton-line"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Author NFTs Skeleton Grid */}
+                <div className="col-md-12">
+                  <div className="row mt-4">
+                    {[...Array(4)].map((_, index) => (
+                      <div className="col-lg-3 col-md-6 col-sm-6" key={index}>
+                        <div className="nft__item skeleton-card">
+                          <div className="skeleton-img"></div>
+                          <div className="skeleton-line title"></div>
+                          <div className="skeleton-line"></div>
+                          <div className="skeleton-line"></div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div id="wrapper">
+      <div className="no-bottom no-top" id="content">
+        {/* ✅ AUTHOR BANNER */}
+        <section
+          id="profile_banner"
+          className="text-light"
+          data-aos="fade-in"
+          data-aos-delay="300"
+          style={{ background: `url(${AuthorBanner}) center / cover` }}
+        />
+
+        <section>
+          <div className="container">
+            <div className="row">
+              {/* PROFILE HEADER */}
+              <div className="col-md-12">
+                <div className="d_profile de-flex">
+                  <div className="de-flex-col">
+                    <div
+                      className="profile_avatar"
+                      data-aos="zoom-in"
+                      data-aos-delay="500"
+                    >
+                      <img src={author.authorImage} alt={author.authorName} />
+                      <i className="fa fa-check"></i>
+
+                      <div className="profile_name">
+                        <h4>
+                          {author.authorName}
+                          <span className="profile_username">
+                            @{author.tag}
+                          </span>
+                          <span className="profile_wallet">
+                            {shortenAddress(author.address)}
+                          </span>
+                          <button
+                            id="btn_copy"
+                            onClick={() =>
+                              navigator.clipboard.writeText(author.address)
+                            }
+                          >
+                            Copy
+                          </button>
+                        </h4>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="profile_follow de-flex">
+                    <div
+                      className="de-flex-col"
+                      data-aos="zoom-in"
+                      data-aos-delay="500"
+                    >
+                      <div className="profile_follower">
+                        {author.followers + (following ? 1 : 0)} followers
+                      </div>
+                      <button
+                        className="btn-main"
+                        onClick={() => setFollowing((f) => !f)}
+                      >
+                        {following ? "Unfollow" : "Follow"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* AUTHOR NFTS */}
+              <div className="col-md-12">
+                <div className="de_tab tab_simple">
+                  <AuthorItems
+                    items={author.nftCollection}
+                    authorImage={author.authorImage}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+};
+
+export default Author;
